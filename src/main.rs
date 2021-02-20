@@ -1,6 +1,10 @@
 use rustls::Session;
 use std::io;
 use std::io::{Read, Write};
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::TryRecvError;
+use std::thread;
 use termion::{
     event::Key, input::MouseTerminal, input::TermRead, raw::IntoRawMode, screen::AlternateScreen,
 };
@@ -14,6 +18,12 @@ use tui::{
 };
 
 mod networking;
+
+enum SignalType {
+    close,
+    scroll_u,
+    scroll_d,
+}
 
 fn navigate(url: networking::UrlParser) -> String {
     let mut config = rustls::ClientConfig::new();
@@ -62,8 +72,24 @@ fn main() {
     let stdout = AlternateScreen::from(stdout);
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
+    let mut scroll: u16 = 0;
+
+    let stdin_channel = spawn_stdin_channel();
 
     'main: loop {
+        match stdin_channel.try_recv() {
+            Ok(SignalType::close) => break 'main,
+            Ok(SignalType::scroll_u) => {
+                if scroll != 0 {
+                    scroll -= 1;
+                }
+            }
+            Ok(SignalType::scroll_d) => {
+                scroll += 1;
+            }
+            Err(TryRecvError::Empty) => {}
+            Err(TryRecvError::Disconnected) => panic!("Stdin thread disconnected!"),
+        }
         terminal
             .draw(|f| {
                 let para = Paragraph::new(content.clone())
@@ -75,15 +101,26 @@ fn main() {
                             .title(Span::styled("Gremlin", Style::default())),
                     )
                     .alignment(Alignment::Left)
-                    .wrap(Wrap { trim: true });
+                    .wrap(Wrap { trim: true })
+                    .scroll((scroll, 0));
                 f.render_widget(para, f.size());
             })
             .unwrap();
-        for c in io::stdin().keys() {
+    }
+}
+
+fn spawn_stdin_channel() -> Receiver<SignalType> {
+    let (tx, rx) = mpsc::channel::<SignalType>();
+    thread::spawn(move || loop {
+        let stdin = io::stdin();
+        for c in stdin.keys() {
             match c.unwrap() {
-                Key::Ctrl('c') => break 'main,
+                Key::Ctrl('c') => tx.send(SignalType::close).unwrap(),
+                Key::Up => tx.send(SignalType::scroll_u).unwrap(),
+                Key::Down => tx.send(SignalType::scroll_d).unwrap(),
                 _ => {}
             }
         }
-    }
+    });
+    rx
 }
