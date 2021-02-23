@@ -50,6 +50,7 @@ impl UrlParser {
 }
 
 pub fn navigate(url: UrlParser) -> String {
+    //!Tries to access the gemini space and returns whatever content is acquired.
     let mut config = rustls::ClientConfig::new();
     let mut config2 = rustls::DangerousClientConfig { cfg: &mut config };
     let certificate_verifier = std::sync::Arc::new(CertVerifier::new());
