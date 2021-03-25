@@ -59,7 +59,7 @@ pub fn navigate(url: UrlParser) -> String {
     let dns_name = webpki::DNSNameRef::try_from_ascii_str(url.get_name()).unwrap();
     let mut client = rustls::ClientSession::new(&shared_cfg, dns_name);
     let mut socket =
-        std::net::TcpStream::connect(url.get_name().to_string() + url.get_port()).unwrap();
+    std::net::TcpStream::connect(url.get_name().to_string() + url.get_port()).expect("Error encountered. Check your internet connection!");
     let mut stream = rustls::Stream::new(&mut client, &mut socket);
     stream.write_all(url.get_request().as_bytes()).unwrap();
 
