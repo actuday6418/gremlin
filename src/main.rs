@@ -14,7 +14,7 @@ mod interface;
 mod networking;
 
 fn main() {
-    let content = networking::navigate(networking::UrlParser::new("gemini.circumlunar.space"));
+    let mut content = networking::navigate(networking::UrlParser::new("gemini.circumlunar.space"));
 
     let line_count = content.as_bytes().iter().filter(|&&c| c == b'\n').count();
     let mut p_block_size: usize = 0;
@@ -50,6 +50,11 @@ fn main() {
             }
             Ok(interface::input::SignalType::ScrollLD) => {
                 link_scroll += 1;
+            }
+            Ok(interface::input::SignalType::Go) => {
+                content = String::from("Garbage!");
+                scroll = 0;
+                link_scroll = 0;
             }
             Err(TryRecvError::Empty) => {}
             Err(TryRecvError::Disconnected) => panic!("Stdin thread disconnected!"),

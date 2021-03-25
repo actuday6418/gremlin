@@ -19,6 +19,7 @@ pub fn ret(link_scroll: u16, scroll: u16, content: &str) -> (bool, Vec<Paragraph
         .bg(Color::Yellow)
         .add_modifier(Modifier::ITALIC);
     let mut link_counter: u16 = 0;
+    let mut url_vec: Vec<String> = Vec::new();
 
     let content: Vec<Spans> = content
         .split('\n')
@@ -46,6 +47,13 @@ pub fn ret(link_scroll: u16, scroll: u16, content: &str) -> (bool, Vec<Paragraph
                             x.remove(0);
                             x.remove(0);
                             x = x.trim().to_string();
+                            let t = x.split_whitespace().collect::<Vec<&str>>();
+                            if x.split_whitespace().collect::<Vec<&str>>().len() > 1 {
+                                url_vec.push(t[0].to_string().clone());
+                                x = t[1..].join("");
+                            } else {
+                                url_vec.push(x.clone());
+                            }
                             if link_counter == link_scroll + 1 {
                                 Spans::from(Span::styled(x, style_selected_link))
                             } else {

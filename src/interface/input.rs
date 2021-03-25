@@ -11,6 +11,7 @@ pub enum SignalType {
     ScrollD,
     ScrollLU,
     ScrollLD,
+    Go,
 }
 
 pub fn spawn_stdin_channel() -> Receiver<SignalType> {
@@ -24,6 +25,7 @@ pub fn spawn_stdin_channel() -> Receiver<SignalType> {
                 Key::Down => tx.send(SignalType::ScrollD).unwrap(),
                 Key::Ctrl('l') => tx.send(SignalType::ScrollLU).unwrap(),
                 Key::Ctrl('k') => tx.send(SignalType::ScrollLD).unwrap(),
+                Key::Alt('g') => tx.send(SignalType::Go).unwrap(),
                 _ => {}
             }
         }
