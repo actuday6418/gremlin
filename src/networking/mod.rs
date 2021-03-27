@@ -28,14 +28,20 @@ pub struct UrlParser {
     dns_name: String,
     request: String,
     port: String,
+    route: String,
 }
 
 impl UrlParser {
     pub fn new(name: &str) -> Self {
+        let mut d_vec = name.splitn(2,"/").collect::<Vec<&str>>();
+        if d_vec.len() == 1 {
+            d_vec.push("");
+        }
         UrlParser {
-            dns_name: name.to_string(),
+            dns_name: d_vec[0].to_string(),
             request: "gemini://".to_string() + name + "/\r\n",
             port: String::from(":1965"),
+            route: d_vec[1].to_string(),
         }
     }
     pub fn get_request(&self) -> &str {
