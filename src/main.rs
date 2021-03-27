@@ -9,15 +9,18 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Terminal,
 };
+use std::thread;
 
 mod interface;
 mod networking;
+mod parser;
 
 fn main() {
-    let mut content = networking::navigate(networking::UrlParser::new("gemini.circumlunar.space/docs/"));
+    let mut content = networking::navigate(networking::UrlParser::new("gemini.circumlunar.space"));
 
     let line_count = content.as_bytes().iter().filter(|&&c| c == b'\n').count();
     let mut p_block_size: usize = 0;
+    let mut decrement_lscroll: bool = false;
 
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode().unwrap();
@@ -29,6 +32,8 @@ fn main() {
     let mut link_scroll: u16 = 0;
 
     let stdin_channel = interface::input::spawn_stdin_channel();
+    let mut styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
+    let mut update_styled = true;
 
     'main: loop {
         match stdin_channel.try_recv() {
@@ -37,41 +42,62 @@ fn main() {
                 if scroll != 0 {
                     scroll -= 1;
                 }
+                update_styled = true;
             }
             Ok(interface::input::SignalType::ScrollD) => {
                 if scroll < line_count - p_block_size + 5 {
                     scroll += 1;
                 }
+                update_styled = true;
             }
             Ok(interface::input::SignalType::ScrollLU) => {
                 if link_scroll != 0 {
                     link_scroll -= 1;
                 }
+                update_styled = true;
             }
             Ok(interface::input::SignalType::ScrollLD) => {
                 link_scroll += 1;
+                update_styled = true;
             }
             Ok(interface::input::SignalType::Go) => {
-                content = String::from("Garbage!");
                 scroll = 0;
                 link_scroll = 0;
+                update_styled = true;
             }
             Err(TryRecvError::Empty) => {}
             Err(TryRecvError::Disconnected) => panic!("Stdin thread disconnected!"),
         }
-        terminal
-            .draw(|f| {
-                let (decrement_lscroll, mut ret) = interface::ui::ret(link_scroll, scroll as u16, content.as_str());
-                if decrement_lscroll {
-                    link_scroll -= 1;
-                }
-                let chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(1), Constraint::Percentage(99)])
-                    .split(f.size());
-                p_block_size = chunks[0].height as usize;
-                f.render_widget(ret.pop().unwrap(), f.size());
-            })
-            .unwrap();
+        if update_styled {
+            styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
+        }
+        if update_styled {
+            update_styled = false;
+            terminal
+                .draw(|f| {
+                    let w = Paragraph::new(styled_content.clone())
+                        .style(Style::default())
+                        .block(
+                            Block::default()
+                                .borders(Borders::ALL)
+                                .style(Style::default())
+                                .title(Span::styled("Gremlin", Style::default())),
+                        )
+                        .alignment(Alignment::Left)
+                        .wrap(Wrap { trim: true })
+                        .scroll((scroll as u16, 0));
+                    if decrement_lscroll {
+                        link_scroll -= 1;
+                    }
+                    let chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([Constraint::Percentage(1), Constraint::Percentage(99)])
+                        .split(f.size());
+                    p_block_size = chunks[0].height as usize;
+                    f.render_widget(w, f.size());
+                })
+                .unwrap();
+        }
+        thread::sleep(std::time::Duration::from_millis(20));
     }
 }

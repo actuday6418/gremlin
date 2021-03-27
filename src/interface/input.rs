@@ -30,5 +30,6 @@ pub fn spawn_stdin_channel() -> Receiver<SignalType> {
             }
         }
     });
+    thread::sleep(std::time::Duration::from_millis(20));
     rx
 }
