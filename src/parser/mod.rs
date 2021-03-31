@@ -70,3 +70,40 @@ pub fn parse(link_scroll: u16, scroll: u16,content: &str) -> Vec<Spans> {
         })
         .collect()
 }
+
+pub fn extractLink(content: &str, link_scroll: u16) -> String {
+    let mut link_counter: u16 = 0;
+    let mut return_val: String = "invalid_entry_12345678".to_string();
+    content
+        .split('\n')
+        .for_each(|x| {
+            if x.len() > 0 {
+                match x.chars().nth(0).unwrap() {
+                    '=' => {
+                        if x.len() > 1 && x.chars().nth(1).unwrap() == '>' {
+                            link_counter += 1;
+                            let mut x = x.to_string();
+                            x.remove(0);
+                            x.remove(0);
+                            x = x.trim().to_string();
+                            let t = x.split_whitespace().nth(0).unwrap();
+                            if x.split_whitespace().collect::<Vec<&str>>().len() > 1 {
+                                link_counter += 1;
+                                if link_counter == link_scroll {
+                                    return_val = t.to_string();
+                                }
+                            } else {
+                                link_counter += 1;
+                                if link_counter == link_scroll {
+                                    return_val = x;
+                                }
+                            }
+                        }
+                    },
+                    _ => {
+                    }
+                }
+            }      
+        });
+        return return_val;
+}

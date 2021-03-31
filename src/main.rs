@@ -1,5 +1,6 @@
 use std::io;
 use std::sync::mpsc::TryRecvError;
+use std::thread;
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
@@ -9,7 +10,6 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Terminal,
 };
-use std::thread;
 
 mod interface;
 mod networking;
@@ -32,8 +32,8 @@ fn main() {
     let mut link_scroll: u16 = 0;
 
     let stdin_channel = interface::input::spawn_stdin_channel();
-    let mut styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
-    let mut update_styled = true;
+
+    let mut update_ui = true;
 
     'main: loop {
         match stdin_channel.try_recv() {
@@ -42,50 +42,41 @@ fn main() {
                 if scroll != 0 {
                     scroll -= 1;
                 }
-                update_styled = true;
+                update_ui = true;
             }
             Ok(interface::input::SignalType::ScrollD) => {
                 if scroll < line_count - p_block_size + 5 {
                     scroll += 1;
                 }
-                update_styled = true;
+                update_ui = true;
             }
             Ok(interface::input::SignalType::ScrollLU) => {
                 if link_scroll != 0 {
                     link_scroll -= 1;
                 }
-                update_styled = true;
+                update_ui = true;
             }
             Ok(interface::input::SignalType::ScrollLD) => {
                 link_scroll += 1;
-                update_styled = true;
+                update_ui = true;
             }
             Ok(interface::input::SignalType::Go) => {
+                content =
+                    networking::navigate(networking::UrlParser::new(parser::extractLink(content.as_str(), link_scroll).as_str()));
                 scroll = 0;
                 link_scroll = 0;
-                update_styled = true;
+                update_ui = true;
             }
             Err(TryRecvError::Empty) => {}
             Err(TryRecvError::Disconnected) => panic!("Stdin thread disconnected!"),
         }
-        if update_styled {
-            styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
-        }
-        if update_styled {
-            update_styled = false;
+        if update_ui {
+            update_ui = false;
+
+            let styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
+            let widget = interface::ui::build(styled_content.clone(), scroll as u16);
             terminal
                 .draw(|f| {
-                    let w = Paragraph::new(styled_content.clone())
-                        .style(Style::default())
-                        .block(
-                            Block::default()
-                                .borders(Borders::ALL)
-                                .style(Style::default())
-                                .title(Span::styled("Gremlin", Style::default())),
-                        )
-                        .alignment(Alignment::Left)
-                        .wrap(Wrap { trim: true })
-                        .scroll((scroll as u16, 0));
                     if decrement_lscroll {
                         link_scroll -= 1;
                     }
@@ -94,7 +85,7 @@ fn main() {
                         .constraints([Constraint::Percentage(1), Constraint::Percentage(99)])
                         .split(f.size());
                     p_block_size = chunks[0].height as usize;
-                    f.render_widget(w, f.size());
+                    f.render_widget(widget.clone(), f.size());
                 })
                 .unwrap();
         }
