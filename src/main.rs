@@ -10,13 +10,23 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Terminal,
 };
+use std::fs;
+use std::io::Write;
 
 mod interface;
 mod networking;
 mod parser;
+mod state;
 
 fn main() {
-    let mut content = networking::navigate(networking::UrlParser::new("gemini.circumlunar.space"));
+    let mut state =  state::ApplicationState::new();
+
+    state.history.push("gemini.circumlunar.space".to_string());
+    
+    let mut content = networking::navigate(networking::UrlParsed::new("gemini.circumlunar.space")
+);
+    let mut f = fs::File::create("content.txt").unwrap();
+    f.write_all(content.as_str().as_bytes()).unwrap();
 
     let line_count = content.as_bytes().iter().filter(|&&c| c == b'\n').count();
     let mut p_block_size: usize = 0;
@@ -61,8 +71,10 @@ fn main() {
                 update_ui = true;
             }
             Ok(interface::input::SignalType::Go) => {
+                let url = networking::UrlParsed::new(parser::extract_link(content.as_str(), link_scroll, &state).as_str());
+                thread::sleep_ms(5000);
                 content =
-                    networking::navigate(networking::UrlParser::new(parser::extractLink(content.as_str(), link_scroll).as_str()));
+                    networking::navigate(url);
                 scroll = 0;
                 link_scroll = 0;
                 update_ui = true;

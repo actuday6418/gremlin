@@ -24,20 +24,21 @@ impl ServerCertVerifier for CertVerifier {
     }
 }
 
-pub struct UrlParser {
+#[derive(Debug)]
+pub struct UrlParsed {
     dns_name: String,
     request: String,
     port: String,
     route: String,
 }
 
-impl UrlParser {
+impl UrlParsed {
     pub fn new(name: &str) -> Self {
         let mut d_vec = name.splitn(2,"/").collect::<Vec<&str>>();
         if d_vec.len() == 1 {
             d_vec.push("");
         }
-        UrlParser {
+        UrlParsed {
             dns_name: d_vec[0].to_string(),
             request: "gemini://".to_string() + name + "/\r\n",
             port: String::from(":1965"),
@@ -55,7 +56,7 @@ impl UrlParser {
     }
 }
 
-pub fn navigate(url: UrlParser) -> String {
+pub fn navigate(url: UrlParsed) -> String {
     //!Tries to access the gemini space and returns whatever content is acquired.
     let mut config = rustls::ClientConfig::new();
     let mut config2 = rustls::DangerousClientConfig { cfg: &mut config };
