@@ -1,6 +1,6 @@
 use rustls::{Certificate, RootCertStore, ServerCertVerified, ServerCertVerifier, TLSError};
-use webpki::DNSNameRef;
 use std::io::{Read, Write};
+use webpki::DNSNameRef;
 
 pub mod status;
 
@@ -29,20 +29,20 @@ pub struct UrlParsed {
     dns_name: String,
     request: String,
     port: String,
-    route: String,
 }
 
 impl UrlParsed {
+    //!URLParsed::new expects a string as parameter that contains the final request exactly. Including "gemini://".
     pub fn new(name: &str) -> Self {
-        let mut d_vec = name.splitn(2,"/").collect::<Vec<&str>>();
-        if d_vec.len() == 1 {
-            d_vec.push("");
-        }
         UrlParsed {
-            dns_name: d_vec[0].to_string(),
-            request: "gemini://".to_string() + name + "/\r\n",
+            dns_name: name
+                .trim_start_matches("gemini://")
+                .splitn(2, "/")
+                .nth(0)
+                .unwrap()
+                .to_string(),
+            request: name.to_string() + "/\r\n",
             port: String::from(":1965"),
-            route: d_vec[1].to_string(),
         }
     }
     pub fn get_request(&self) -> &str {
@@ -65,8 +65,8 @@ pub fn navigate(url: UrlParsed) -> String {
     let shared_cfg = std::sync::Arc::new(config);
     let dns_name = webpki::DNSNameRef::try_from_ascii_str(url.get_name()).unwrap();
     let mut client = rustls::ClientSession::new(&shared_cfg, dns_name);
-    let mut socket =
-    std::net::TcpStream::connect(url.get_name().to_string() + url.get_port()).expect("Error encountered. Check your internet connection!");
+    let mut socket = std::net::TcpStream::connect(url.get_name().to_string() + url.get_port())
+        .expect("Error encountered. Check your internet connection!");
     let mut stream = rustls::Stream::new(&mut client, &mut socket);
     stream.write_all(url.get_request().as_bytes()).unwrap();
 

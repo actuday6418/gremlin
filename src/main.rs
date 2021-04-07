@@ -21,12 +21,10 @@ mod state;
 fn main() {
     let mut state =  state::ApplicationState::new();
 
-    state.history.push("gemini.circumlunar.space".to_string());
+    state.history.push("gemini://gemini.circumlunar.space".to_string());
     
-    let mut content = networking::navigate(networking::UrlParsed::new("gemini.circumlunar.space")
+    let mut content = networking::navigate(networking::UrlParsed::new("gemini://gemini.circumlunar.space")
 );
-    let mut f = fs::File::create("content.txt").unwrap();
-    f.write_all(content.as_str().as_bytes()).unwrap();
 
     let line_count = content.as_bytes().iter().filter(|&&c| c == b'\n').count();
     let mut p_block_size: usize = 0;
@@ -71,8 +69,10 @@ fn main() {
                 update_ui = true;
             }
             Ok(interface::input::SignalType::Go) => {
-                let url = networking::UrlParsed::new(parser::extract_link(content.as_str(), link_scroll, &state).as_str());
-                thread::sleep_ms(5000);
+                let redirect_link = parser::extract_link(content.as_str(), link_scroll, &state);
+                let url = networking::UrlParsed::new(redirect_link.as_str());
+                let mut f = fs::File::create("content.txt").unwrap();
+                f.write_all(format!("{:?}", url).as_bytes()).unwrap();
                 content =
                     networking::navigate(url);
                 scroll = 0;
