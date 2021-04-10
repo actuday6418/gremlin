@@ -15,6 +15,6 @@ pub fn build(content: Vec<Spans>, scroll: u16) -> Paragraph {
                                 .title(Span::styled("Gremlin", Style::default())),
                         )
                         .alignment(Alignment::Left)
-                        .wrap(Wrap { trim: true })
+                        .wrap(Wrap {trim: false})
                         .scroll((scroll as u16, 0))
 }

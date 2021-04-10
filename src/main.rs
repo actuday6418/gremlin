@@ -1,4 +1,6 @@
+use std::fs;
 use std::io;
+use std::io::Write;
 use std::sync::mpsc::TryRecvError;
 use std::thread;
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
@@ -10,8 +12,6 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Terminal,
 };
-use std::fs;
-use std::io::Write;
 
 mod interface;
 mod networking;
@@ -19,16 +19,16 @@ mod parser;
 mod state;
 
 fn main() {
-    let mut state =  state::ApplicationState::new();
+    let mut state = state::ApplicationState::new();
 
-    state.history.push("gemini://gemini.circumlunar.space".to_string());
-    
-    let mut content = networking::navigate(networking::UrlParsed::new("gemini://gemini.circumlunar.space")
-);
+    state
+        .history
+        .push("gemini://gemini.circumlunar.space".to_string());
 
-    let line_count = content.as_bytes().iter().filter(|&&c| c == b'\n').count();
+    let mut content = networking::navigate(networking::UrlParsed::new(
+        "gemini://gemini.circumlunar.space",
+    ));
     let mut p_block_size: usize = 0;
-    let mut decrement_lscroll: bool = false;
 
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode().unwrap();
@@ -53,9 +53,7 @@ fn main() {
                 update_ui = true;
             }
             Ok(interface::input::SignalType::ScrollD) => {
-                if scroll < line_count - p_block_size + 5 {
-                    scroll += 1;
-                }
+                scroll += 1;
                 update_ui = true;
             }
             Ok(interface::input::SignalType::ScrollLU) => {
@@ -71,10 +69,12 @@ fn main() {
             Ok(interface::input::SignalType::Go) => {
                 let redirect_link = parser::extract_link(content.as_str(), link_scroll, &state);
                 let url = networking::UrlParsed::new(redirect_link.as_str());
+                state
+                    .history
+                    .push(url.get_request().trim_end_matches("/\r\n").to_string());
                 let mut f = fs::File::create("content.txt").unwrap();
                 f.write_all(format!("{:?}", url).as_bytes()).unwrap();
-                content =
-                    networking::navigate(url);
+                content = networking::navigate(url);
                 scroll = 0;
                 link_scroll = 0;
                 update_ui = true;
@@ -89,9 +89,6 @@ fn main() {
             let widget = interface::ui::build(styled_content.clone(), scroll as u16);
             terminal
                 .draw(|f| {
-                    if decrement_lscroll {
-                        link_scroll -= 1;
-                    }
                     let chunks = Layout::default()
                         .direction(Direction::Horizontal)
                         .constraints([Constraint::Percentage(1), Constraint::Percentage(99)])
