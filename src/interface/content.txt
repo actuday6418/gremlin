@@ -1,0 +1,1 @@
+UrlParsed { dns_name: "gemini.circumlunar.space", request: "gemini://gemini.circumlunar.space/docs/cheatsheet.gmi/\r\n", port: ":1965" }

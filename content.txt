@@ -1,1 +1,1 @@
-UrlParsed { dns_name: "gemini.circumlunar.space", request: "gemini://gemini.circumlunar.space/docs/faq.gmi/\r\n", port: ":1965" }
+UrlParsed { dns_name: "cosmic.voyage:1965", request: "gemini://cosmic.voyage:1965//\r\n", port: ":1965" }
