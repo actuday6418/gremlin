@@ -12,6 +12,7 @@ Gemini browser for the terminal
    2. Create a help menu
    3. Provide visual feedback about what command you just used.
    4. Find a fix for infinite scrolling
+   5. Allow users to customise the colors of the application (background, Headings, Sub headings, etc.)
    
 2. Low priority bugs (crash when gemini space has no links, performance issues when scrolling a lot)
 3. Trust on first use (TOFU) for TLS certificates.
