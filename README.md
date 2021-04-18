@@ -1,6 +1,8 @@
 # Gremlin
 Gemini browser for the terminal
 
+[What is Gemini?](https://gemini.circumlunar.space/)
+
 # Implemented features
 1. Basic text formatting according to the text/gemini specification. (Headings, sub-headings, links and more)
 2. Moving up and down the browsing history.
