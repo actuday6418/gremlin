@@ -29,3 +29,7 @@ Gemini browser for the terminal
 
 # Rough Screen Recording
 ![out](https://user-images.githubusercontent.com/56124831/115050646-9774ed80-9ef9-11eb-9f4d-5bfe6a4325d5.gif)
+
+# Gremlin on Android (Termux)
+![Screenshot_20210420-171455_Termux](https://user-images.githubusercontent.com/56124831/115551344-872d8b80-a2c8-11eb-918a-b9b024e935bc.png)
+
