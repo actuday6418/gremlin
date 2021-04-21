@@ -27,7 +27,7 @@ Gemini browser for the terminal
 5. Alt + n - Enter URI to navigate to (This takes you into Edit mode)
 6. Ctrl + c - Exit application (Works in Normal and Edit mode)
 
-# Rough Screen Recording
+# Rough Screen Recording (Arch, btw)
 ![out](https://user-images.githubusercontent.com/56124831/115050646-9774ed80-9ef9-11eb-9f4d-5bfe6a4325d5.gif)
 
 # Gremlin on Android (Termux)
