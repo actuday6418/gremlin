@@ -87,7 +87,7 @@ pub fn extract_link(content: &str, link_scroll: u16, state: &state::ApplicationS
                         let t = x.split_whitespace().nth(0).unwrap();
                         if link_counter == link_scroll {
                             if x.split_whitespace().collect::<Vec<&str>>().len() > 1 {
-                                if !t.to_string().starts_with("gemini://") {
+                                if !t.to_string().starts_with("gemini://") && !t.to_string().starts_with("https://") && !t.to_string().starts_with("file://") {
                                     return_val = state.history[state.history.len() - 1].clone();
                                     if return_val.ends_with('/') {
                                         return_val += t;
