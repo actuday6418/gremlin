@@ -6,10 +6,8 @@ use std::thread;
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style},
-    text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Paragraph, Wrap, Clear},
+    layout::{ Constraint, Direction, Layout},
+    widgets::Clear,
     Terminal,
 };
 
@@ -23,10 +21,10 @@ fn main() {
 
     state
         .history
-        .push("gemini://gemini.circumlunar.space".to_string());
+        .push("help://".to_string());
 
     let mut content = networking::navigate(networking::UrlParsed::new(
-        "gemini://gemini.circumlunar.space",
+        "help://",
     ));
     let mut p_block_size: usize = 0;
 
@@ -67,7 +65,7 @@ fn main() {
                 update_ui = true;
             }
             Ok(interface::input::Data::Command(interface::input::SignalType::Go)) => {
-                let mut redirect_link: String;
+                let redirect_link: String;
                 if state.mode == state::Mode::Editing {
                     redirect_link = state.curr_input.clone();
                     state.curr_input.clear();
@@ -126,7 +124,7 @@ fn main() {
         if update_ui {
             update_ui = false;
 
-            let styled_content = parser::parse(link_scroll, scroll as u16, content.as_str());
+            let styled_content = parser::parse(link_scroll,content.as_str());
             terminal
                 .draw(|f| {
                     let widget_main =

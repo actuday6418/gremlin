@@ -1,11 +1,6 @@
 use tui::layout::Rect;
-use tui::widgets::Clear;
 use tui::{
-    backend::TermionBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
-    Terminal,
+    layout::{Constraint, Direction, Layout},
 };
 
 pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {

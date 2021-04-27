@@ -1,8 +1,8 @@
 use tui::{
-    layout::{Alignment, Constraint, Layout},
-    style::{Color, Modifier, Style},
+    layout::Alignment,
+    style::Style,
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Paragraph, Wrap},
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 pub fn build_main(content: Vec<Spans>, scroll: u16) -> Paragraph {

@@ -5,7 +5,7 @@ use tui::{
 
 use crate::state;
 
-pub fn parse(link_scroll: u16, scroll: u16, content: &str) -> Vec<Spans> {
+pub fn parse(link_scroll: u16, content: &str) -> Vec<Spans> {
     let style_heading: Style = Style::default().fg(Color::Red).add_modifier(Modifier::BOLD);
     let style_sub_heading: Style = Style::default()
         .fg(Color::Magenta)
