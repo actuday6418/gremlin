@@ -25,7 +25,7 @@ impl ServerCertVerifier for CertVerifier {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Scheme {
     Gemini,
     File,
@@ -44,15 +44,13 @@ pub struct UrlParsed {
 impl UrlParsed {
     //!URLParsed::new expects a string as parameter that contains the final request, possibly including "gemini://".
     pub fn new(name: &str) -> Self {
-        let mut edited_name: String;
+        let edited_name: String;
         let edited_request: String;
         let scheme: Scheme;
 
         if name.starts_with("file://") {
             scheme = Scheme::File;
-            edited_name = String::from(name)
-                .trim_start_matches("file://")
-                .to_string();
+            edited_name = String::from(name).trim_start_matches("file://").to_string();
             edited_request = edited_name.clone();
         } else if name == "help://" {
             scheme = Scheme::HelpScreen;
@@ -61,14 +59,17 @@ impl UrlParsed {
         } else if name.starts_with("https://") {
             scheme = Scheme::Https;
             edited_name = name.to_string().trim_start_matches("https://").to_string();
-            edited_request = "GET /index.html HTTP/1.1 Host: ".to_string() + edited_name.clone().as_str() + " Accept: text/html\r\n"; 
+            edited_request = "GET / HTTP/1.1 Host: ".to_string()
+                + edited_name.clone().as_str()
+                + " Accept: text/html\r\n";
         } else if !name.starts_with("gemini://") {
             scheme = Scheme::Gemini;
             edited_name = String::from(name);
             edited_request = "gemini://".to_string() + name + "/\r\n";
         } else {
             scheme = Scheme::Gemini;
-            edited_name = name.trim_start_matches("gemini://")
+            edited_name = name
+                .trim_start_matches("gemini://")
                 .splitn(2, "/")
                 .nth(0)
                 .unwrap()
@@ -77,10 +78,13 @@ impl UrlParsed {
         }
 
         UrlParsed {
-            scheme: scheme,
+            scheme: scheme.clone(),
             dns_name: edited_name,
             request: edited_request,
-            port: String::from(":1965"),
+            port: match scheme {
+                Scheme::Gemini => String::from(":1965"),
+                _ => String::from(":443"),
+            },
         }
     }
     pub fn get_request(&self) -> &str {
@@ -144,7 +148,7 @@ pub fn navigate(url: UrlParsed) -> String {
 * Use the arrow keys to scroll and Ctrl+k and Ctrl+l to scroll links\n\n
 * Use Alt+k and Alt+l to scroll through your history.\n\n
 * This menu may be accesed at any time using 'help://' from the navigation popup.\n\n
-=> gemini://gemini.circumlunar.space Here's a link to the Gemini homepage")
+=> https://google.com Here's a link to the Gemini homepage")
     }
     Scheme::File => {
         let mut file = fs::File::open(url.get_request()).unwrap();
@@ -153,42 +157,11 @@ pub fn navigate(url: UrlParsed) -> String {
         buffer
     }
     Scheme::Https => {
-        let mut config = rustls::ClientConfig::new();
-        let mut config2 = rustls::DangerousClientConfig { cfg: &mut config };
-        let certificate_verifier = std::sync::Arc::new(CertVerifier::new());
-        config2.set_certificate_verifier(certificate_verifier);
-        let shared_cfg = std::sync::Arc::new(config);
-        let dns_name = webpki::DNSNameRef::try_from_ascii_str(url.get_name()).unwrap();
-        let mut client = rustls::ClientSession::new(&shared_cfg, dns_name);
-        let mut socket = std::net::TcpStream::connect(url.get_name().to_string() + url.get_port())
-            .expect("Error encountered. Check your internet connection!");
-        let mut stream = rustls::Stream::new(&mut client, &mut socket);
-        stream.write_all(url.get_request().as_bytes()).unwrap();
+        let res = reqwest::blocking::get("https://wikipedia.com").unwrap();
 
-        let mut data = Vec::new();
-        let _ = stream.read_to_end(&mut data);
-        let data = String::from(String::from_utf8_lossy(&data));
-        let mut status_string = String::new();
-        let mut content_string: String;
-        let mut chars = data.chars();
-        let mut no_chars: i32 = 0;
-        loop {
-            no_chars += 1;
-            let c = chars.next().unwrap();
-            if c == '\n' {
-                break;
-            } else {
-                status_string.push(c);
-            }
-        }
-        content_string = data;
-        content_string.drain(..no_chars as usize);
-        let status = status::Status::new(status_string);
-        if status.is_ok() {
-            content_string
-        } else {
-            panic!("Server returned error status!");
-        }
+        let mut content = String::new();
+        
+        content
     }
 }
 }
