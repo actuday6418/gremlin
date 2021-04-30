@@ -10,6 +10,5 @@ termion="1.5"
 rustls= { version = "0.19", features = ["dangerous_configuration"]}
 webpki="*"
 webpki-roots="*"
-reqwest={version = "0.11.3", features = ["blocking"]}
-scraper="*"
-tendril="*"
+reqwest={version = "0.11.3", features = ["blocking","json"]}
+voca_rs = "*"

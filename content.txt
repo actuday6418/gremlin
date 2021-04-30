@@ -1,1 +1,1 @@
-UrlParsed { scheme: Https, dns_name: "google.com", request: "GET / HTTP/1.1 Host: google.com Accept: text/html\r\n", port: ":443" }
+UrlParsed { scheme: Https, dns_name: "wikipedia.com", request: "GET / HTTP/1.1 Host: wikipedia.com Accept: text/html\r\n", port: ":443" }

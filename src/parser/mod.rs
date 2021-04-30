@@ -5,7 +5,37 @@ use tui::{
 
 use crate::state;
 
-pub fn parse(link_scroll: u16, content: &str) -> Vec<Spans> {
+
+enum HtmlParsingMode {
+    ///These parsing modes are used in the HTML parser function as the state
+    /// of the function's traversal 
+    SkippingTag,
+    ParagraphTag,
+    LinkTag,
+} 
+
+pub fn parse_html(content: &str) -> &str {
+    //!Takes HTML text, parses it, and returns whatever can be effectively displayed on a terminal.
+    //!Reformats links according to the text/gemini to allow redirects and proper formatting
+    //!Also reformats headings for formatting.
+    let mut parsed_str = "";
+    let mut mode: HtmlParsingMode = HtmlParsingMode::SkippingTag;
+    let content = &content[content.find("<body").unwrap() + 5 ..];
+    let content = &content[content.find(">").unwrap() + 1 ..];
+    let content = &content[..content.find("</body>").unwrap()];
+    for index in 0..content.len() { 
+    match mode {
+            HtmlParsingMode::SkippingTag => {},
+            HtmlParsingMode::ParagraphTag => {
+            },
+            HtmlParsingMode::LinkTag => {
+            }
+        }
+    }
+    content
+}
+
+pub fn parse_gemini(link_scroll: u16, content: &str) -> Vec<Spans> {
     let style_heading: Style = Style::default().fg(Color::Red).add_modifier(Modifier::BOLD);
     let style_sub_heading: Style = Style::default()
         .fg(Color::Magenta)

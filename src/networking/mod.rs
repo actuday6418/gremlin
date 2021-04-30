@@ -148,7 +148,7 @@ pub fn navigate(url: UrlParsed) -> String {
 * Use the arrow keys to scroll and Ctrl+k and Ctrl+l to scroll links\n\n
 * Use Alt+k and Alt+l to scroll through your history.\n\n
 * This menu may be accesed at any time using 'help://' from the navigation popup.\n\n
-=> https://google.com Here's a link to the Gemini homepage")
+=> https://wikipedia.com Here's not a link to the Gemini homepage")
     }
     Scheme::File => {
         let mut file = fs::File::open(url.get_request()).unwrap();
@@ -157,10 +157,13 @@ pub fn navigate(url: UrlParsed) -> String {
         buffer
     }
     Scheme::Https => {
-        let res = reqwest::blocking::get("https://wikipedia.com").unwrap();
-
-        let mut content = String::new();
-        
+        use voca_rs;
+        let res = reqwest::blocking::get("https://en.wikipedia.org/w/api.php?action=parse&format=json&titles=Jesus&prop=revisions&rvprop=content", ).unwrap();
+        let content = res.text().unwrap();
+        let content = voca_rs::strip::strip_tags(&content);
+        let mut f = std::fs::File::create("recieved.txt").unwrap();
+        f.write_all(content.clone().as_bytes()).unwrap();
+        //let content = crate::parser::parse_html(content.as_str()).to_string();
         content
     }
 }

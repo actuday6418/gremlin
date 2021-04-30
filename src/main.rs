@@ -124,7 +124,7 @@ fn main() {
         if update_ui {
             update_ui = false;
 
-            let styled_content = parser::parse(link_scroll,content.as_str());
+            let styled_content = parser::parse_gemini(link_scroll,content.as_str());
             terminal
                 .draw(|f| {
                     let widget_main =
