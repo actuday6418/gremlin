@@ -26,7 +26,8 @@ fn main() {
     let mut content = networking::navigate(networking::UrlParsed::new(
         "help://",
     ));
-    let mut p_block_size: usize = 0;
+    let mut p_height: usize = 0;
+    let mut written_height: usize = 0;
 
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode().unwrap();
@@ -36,6 +37,7 @@ fn main() {
     let mut terminal = Terminal::new(backend).unwrap();
     let mut scroll: usize = 0;
     let mut link_scroll: u16 = 0;
+    let mut scroll_overflowed: bool = false;
 
     let stdin_channel = interface::input::spawn_stdin_channel();
 
@@ -49,9 +51,12 @@ fn main() {
                     scroll -= 1;
                 }
                 update_ui = true;
+                scroll_overflowed = false;
             }
             Ok(interface::input::Data::Command(interface::input::SignalType::ScrollD)) => {
-                scroll += 1;
+                if !scroll_overflowed {
+                  scroll += 1;
+                }
                 update_ui = true;
             }
             Ok(interface::input::Data::Command(interface::input::SignalType::ScrollLU)) => {
@@ -123,7 +128,6 @@ fn main() {
         }
         if update_ui {
             update_ui = false;
-
             let styled_content = parser::parse_gemini(link_scroll,content.as_str().clone());
             terminal
                 .draw(|f| {
@@ -135,10 +139,22 @@ fn main() {
                         .constraints([Constraint::Percentage(100)])
                         .split(f.size());
 
+                    f.render_widget(widget_main.clone(), chunks[0]);
+                    
                     //Contains correct height of rendered text
-                    p_block_size = chunks[0].height as usize;
+                    p_height = chunks[0].height as usize - 2;
 
-                    f.render_widget(widget_main, chunks[0]);
+                    //Check if paragraph overflowed
+                    use std::io::BufRead;
+                    let file_reader = std::fs::File::open("/tmp/tuitmp.txt").unwrap();
+                    let file_reader = std::io::BufReader::new(file_reader);
+                    written_height = file_reader.lines().last().unwrap().unwrap().trim().parse::<usize>().unwrap();
+                      
+                    if written_height - scroll < p_height {
+                      scroll_overflowed = true;
+                      //println!("p:{} w:{}", p_height, written_height);
+                      //println!("DE");
+                    }
                     if state.mode == state::Mode::Editing {
                         let popup = interface::popup::centered_rect(90, 90, f.size());
 

@@ -157,7 +157,6 @@ pub fn navigate(url: UrlParsed) -> String {
         buffer
     }
     Scheme::Https => {
-        use voca_rs;
         let res = reqwest::blocking::get("https://en.wikipedia.org/w/api.php?action=parse&format=json&titles=Jesus&prop=revisions&rvprop=content", ).unwrap();
         let content = res.text().unwrap();
         let content = voca_rs::strip::strip_tags(&content);
