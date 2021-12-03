@@ -99,7 +99,7 @@ impl UrlParsed {
 }
 
 pub fn navigate(url: UrlParsed) -> String {
-    //!This function uses information from a UrlParsed object to navigate over gmini, HTTPS, or through
+    //!This function uses information from a UrlParsed object to navigate over gemini, HTTPS, or through
     //!the local file system
     match url.scheme {
     Scheme::Gemini => {
