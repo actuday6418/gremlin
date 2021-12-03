@@ -124,17 +124,21 @@ fn main() {
         if update_ui {
             update_ui = false;
 
-            let styled_content = parser::parse_gemini(link_scroll,content.as_str());
+            let styled_content = parser::parse_gemini(link_scroll,content.as_str().clone());
             terminal
                 .draw(|f| {
                     let widget_main =
                         interface::ui::build_main(styled_content.clone(), scroll as u16);
+
                     let chunks = Layout::default()
                         .direction(Direction::Horizontal)
-                        .constraints([Constraint::Percentage(1), Constraint::Percentage(99)])
+                        .constraints([Constraint::Percentage(100)])
                         .split(f.size());
+
+                    //Contains correct height of rendered text
                     p_block_size = chunks[0].height as usize;
-                    f.render_widget(widget_main, f.size());
+
+                    f.render_widget(widget_main, chunks[0]);
                     if state.mode == state::Mode::Editing {
                         let popup = interface::popup::centered_rect(90, 90, f.size());
 
